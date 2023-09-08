@@ -1,0 +1,20 @@
+/node_modules
+npm-debug.log
+newrelic_agent.log
+
+# Env
+.env
+.env.*
+!.env.sample
+
+.console-history
+
+lets_encrypt_bundle_ca.pem
+
+pdf_process/
+!pdf_process/README.md
+public/images/
+!public/images/petition/README.md
+
+# Mac OS folder management
+.DS_Store

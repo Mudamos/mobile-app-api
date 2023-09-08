@@ -1,0 +1,88 @@
+#! /usr/bin/env node
+
+"use strict";
+
+require("dotenv").config({ silent: true });
+
+const {
+  clamp,
+  flip,
+} = require("ramda");
+
+const config = require("../config")({ DB_LOGGING: true });
+const db = require("../src/db")(config);
+const { logCreator } = require("../src/services");
+const { logger } = logCreator(config);
+const program = require("commander");
+
+const adjustDownLimit = clamp(0, Number.MAX_SAFE_INTEGER);
+
+const updateQuery = `
+  UPDATE vote v
+    INNER JOIN user u ON u.voteIdCard = v.voteIdCard
+    LEFT JOIN city c ON c.name = u.city AND c.uf = u.uf
+  SET
+    v.state = u.state,
+    v.cityName = u.city,
+    v.district = u.district,
+    v.uf = u.uf,
+    v.cityId = c.id
+`;
+
+const downHillQuery = `
+  ${updateQuery}
+  WHERE
+    v.id >= ? AND v.id <= ?
+`;
+
+const restUpdateQuery = `
+  ${updateQuery}
+  WHERE
+    v.id > ?
+`;
+
+const maxVoteIdQuery = `
+  SELECT
+    MAX(id) as maxVoteId
+  from vote;
+`;
+
+const toInt = flip(parseInt)(10);
+const defaultBatchSize = 10000;
+
+program
+  .usage("sync-vote-location [options]")
+  .option("-b, --batch-size <n>", "Batch size [10000]", toInt, defaultBatchSize)
+  .parse(process.argv);
+
+const batchSize = program.batchSize || defaultBatchSize;
+
+db.transaction(async transaction => {
+  const [{ maxVoteId }] = await db.query(maxVoteIdQuery, { transaction, type: db.QueryTypes.SELECT });
+  logger.info("Max vote id: %d", maxVoteId);
+
+  if (!maxVoteId) return;
+
+  let upperLimit = maxVoteId;
+
+  while (upperLimit > 0) {
+    const lowerLimit = adjustDownLimit(upperLimit - batchSize);
+
+    await db.query(downHillQuery, {
+      transaction,
+      replacements: [lowerLimit, upperLimit],
+    });
+
+    upperLimit = lowerLimit;
+  }
+
+  return db.query(restUpdateQuery, { transaction, replacements: [maxVoteId] });
+})
+  .then(() => {
+    logger.info("Successfully migrated");
+    process.exit(0);
+  })
+  .catch(error => {
+    logger.error(error);
+    process.exit(1);
+  });

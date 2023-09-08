@@ -1,0 +1,83 @@
+#! /usr/bin/env node
+"use strict";
+
+/* Syncs user zipCode when the addres is not set.
+ *
+ * Usage:
+ *
+ * ./bin/syn-user-address 2 100 viacep
+ *
+ * Where arg 2, '2' is the concurrency when trying to fetch the address info from google.
+ * Where arg 3, '100' is the limit when fetching from db where 0 is no limit
+ * Where arg 4, 'viacep' is to skip google maps
+ *
+ * Recommended reprocess all production: ./bin/syn-user-address 20
+ *
+ * Failed process data will be saved to {app_root}/bin/sync-user-address-fails.csv
+ */
+
+require("dotenv").config({ silent: true });
+require("nconf").use("memory").env();
+
+const { always, filter, pick, prop } = require("ramda");
+const config = require("../config")({ DB_LOGGING: false });
+const db = require("../src/db")(config);
+const fs = require("fs");
+const { logCreator } = require("../src/services");
+const { logger } = logCreator(config);
+const { userRepository } = require("../src/repositories");
+const Promise = require("bluebird");
+const AddressService = require("../app_v3/services/address");
+
+const DEFAULT_CONCURRENCY = 20;
+const concurrency = parseInt(process.argv[2] || DEFAULT_CONCURRENCY, 10);
+
+const limit = process.argv[3] ? parseInt(process.argv[3], 10) : null;
+const skipGoogleMaps = process.argv[3] === "viacep";
+
+const errorFile = fs.createWriteStream(`${__dirname}/sync-user-address-fails.csv`, {
+  flags: "a",
+});
+
+const cleanUp = filter(Boolean);
+const delay = ms => result => Promise.delay(ms()).then(always(result));
+const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+
+const sync = async () => {
+  const repository = userRepository(db);
+  const users = await repository.findAllWithZipCodeAndNoAddress({ limit: limit === 0 ? null : limit });
+
+  return Promise.map(users, user =>
+    AddressService.search(user.zipCode, { skipGoogleMaps })
+      .then(prop("data"))
+      .then(pick(["district", "state", "uf", "city", "lat", "lng"]))
+      .then(cleanUp)
+      .then(address => repository.updateById(user.id)({
+        district: address.district,
+        state: address.state,
+        uf: address.uf,
+        cityName: address.city,
+        lat: address.lat,
+        lng: address.lng,
+      }))
+      .then(() => logger.info("Updated user id", user.id))
+      .then(delay(() => randomInt(1200, 1700))) // api limit: 50 reqs per second
+      .catch(e => {
+        logger.error("Failed to fetch for: ", { id: user.id, zipCode: user.zipCode }, e);
+        errorFile.write(`${user.id},${user.zipCode}\n`, "utf8");
+      }), { concurrency }
+  );
+};
+
+sync()
+  .then(() => {
+      logger.info("Finished");
+      errorFile.end();
+      process.exit(0);
+  })
+  .catch(error => {
+    logger.error(error);
+    errorFile.end();
+    process.exit(1);
+  });
+

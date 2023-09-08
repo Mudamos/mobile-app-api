@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -euo pipefail
+
+PROFILE="${PROFILE_NAME:-mudamos}"
+echo "Pushing staging image to AWS using profile $PROFILE"
+
+`aws ecr get-login --no-include-email --profile $PROFILE`
+
+docker push ${REMOTE_REPO}

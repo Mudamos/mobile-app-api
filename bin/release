@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -euo pipefail
+
+if [[ -z "${APP_VERSION:-}" ]]; then
+  echo "Error: Env APP_VERSION must be given" && exit 1
+fi
+
+PROFILE="${PROFILE_NAME:-mudamos}"
+echo "===Start building $APP_VERSION using aws profile $PROFILE==="
+
+`aws ecr get-login --no-include-email --profile $PROFILE`
+
+# Build image
+npm run build-latest
+
+echo "===Tagging==="
+
+# Tag and push the new version
+docker tag mudamosapi:latest mudamosapi:$APP_VERSION
+docker tag mudamosapi:latest mudamosapi:staging
+docker tag mudamosapi:latest ${REMOTE_REPO}:$APP_VERSION
+docker tag mudamosapi:latest ${REMOTE_REPO}:staging
+docker push ${REMOTE_REPO}:$APP_VERSION
+
+echo "===Tagging latest==="
+npm run tag-latest
+
+echo "===Done==="

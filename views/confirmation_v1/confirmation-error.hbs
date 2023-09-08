@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Bem-vindo à Mudamos</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Merriweather+Sans:300,700" rel="stylesheet">
+  <style type="text/css">
+    * {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      vertical-align: baseline;
+    }
+
+    body {
+      font-family: "Merriweather Sans", sans-serif;
+      font-size: 22px;
+      font-weight: 300;
+    }
+
+    a.button {
+      color: #fff;
+      background-color: #00C182;
+      border-bottom: 3px solid #04AA71;
+      border-radius: 50px;
+      font-weight: 700;
+      padding: 14px 56px;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+
+    p.body {
+      color: #4A4A4A;
+      margin: 24px 0 50px;
+    }
+
+    p.lead {
+      color: #343434;
+      font-size: 36px;
+      margin-top: 52px;
+    }
+
+    strong {
+      font-weight: 700;
+    }
+
+    .container {
+      margin: 0 auto;
+      max-width: 488px;
+      padding: 40px 16px;
+      text-align: center;
+    }
+
+    .drawing {
+      margin-top: 60px;
+    }
+
+    @media only screen and (max-width: 480px) {
+      body {
+        font-size: 17px;
+      }
+
+      p.body {
+        margin: 18px 0 37px;
+      }
+
+      p.lead {
+        font-size: 22px;
+        margin-top: 38px;
+      }
+
+      .drawing {
+        margin-top: 45px;
+      }
+
+      .drawing img {
+        height: 120px;
+      }
+
+      .logo img {
+        height: 70px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="https://s3-sa-east-1.amazonaws.com/mudamos-images/images/logo-2.png" />
+    </div>
+
+    <div class="drawing">
+      <img src="https://s3-sa-east-1.amazonaws.com/mudamos-images/images/drawing_error.png" />
+    </div>
+
+    {{#if message.user}}
+    <p class="lead">
+      <strong>{{message.user.user_name}}</strong>
+    </p>
+    {{/if}} 
+
+    {{#if message.message}}
+    <p class="lead">
+      <strong>{{message.message}}</strong>
+    </p>
+    {{/if}} 
+    
+
+    <p class="body">
+      <strong>Por favor, tente repetir a operação. Se o erro persistir, entre em contato conosco pelo e-mails <a href="mailto:contato@mudamos.org?subject=Erro aplicativo Mudamos">contato@mudamos.org</a>.</strong>
+    </p>
+
+  </div>
+</body>
+
+</html>

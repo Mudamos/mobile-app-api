@@ -1,0 +1,29 @@
+#! /usr/bin/env node
+"use strict";
+
+require("dotenv").config({ silent: true });
+
+const fs = require("fs");
+const path = require("path");
+const config = require("../config")();
+const db = require("../src/db")(config);
+const { logCreator } = require("../src/services");
+const { logger } = logCreator(config);
+const { promisify } = require("../src/utils");
+
+const readFile = promisify(fs.readFile);
+
+const sqlFile = path.join(__dirname, "../src/db/seeds/other-cities-names.sql");
+
+readFile(sqlFile, "utf8")
+  .then(sql => db.transaction(transaction => {
+    sql.split("\n").filter(Boolean).map(line => db.query(line, { transaction }))
+  }))
+  .then(() => {
+    logger.info("Import finished");
+    process.exit(0);
+  })
+  .catch(error => {
+    logger.error(error);
+    process.exit(1);
+  });

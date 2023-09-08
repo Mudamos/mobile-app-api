@@ -1,0 +1,48 @@
+#! /usr/bin/env node
+
+"use strict";
+
+require("dotenv").config({ silent: true });
+
+const {
+  isNil,
+  isEmpty,
+  path,
+  prop,
+} = require("ramda");
+
+const config = require("../config")();
+const db = require("../src/db")(config);
+const { logCreator } = require("../src/services");
+const { logger } = logCreator(config);
+const { petitionRepository } = require("../src/repositories");
+const repository = petitionRepository(db);
+const { MudamosClient } = require("../src/services");
+const client = MudamosClient(config);
+
+const isBlank = v => isNil(v) || isEmpty(v);
+
+const updatePetition = ({ transaction, scopeCoverage, cityId, uf }) => petitionId =>
+  repository.updateAllLocationByPetitionId({ petitionId, transaction })({ scopeCoverage, cityId, uf });
+
+client
+  .listPlips({ scope: "all", limit: 100 })
+  .then(plips => db.transaction(transaction => Promise.all(plips.map(({ id, scopeCoverage }) =>
+    repository.findByVersionId(id)
+      .then(prop("petitionId"))
+      .then(updatePetition({
+        transaction,
+
+        scopeCoverage: scopeCoverage.scope,
+        cityId: path(["city", "id"], scopeCoverage),
+        uf: isBlank(scopeCoverage.uf) ? null : scopeCoverage.uf,
+      }))
+  ))))
+  .then(() => {
+    logger.info("Successfully migrated");
+    process.exit(0);
+  })
+  .catch(error => {
+    logger.error(error);
+    process.exit(1);
+  });

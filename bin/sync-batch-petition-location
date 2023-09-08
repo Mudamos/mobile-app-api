@@ -1,0 +1,66 @@
+#! /usr/bin/env node
+"use strict";
+
+require("dotenv").config({ silent: true });
+
+const {
+  reject,
+} = require("ramda");
+
+const config = require("../config")({ DB_LOGGING: false });
+const db = require("../src/db")(config);
+
+const { logCreator } = require("../src/services");
+const { logger } = logCreator(config);
+
+const {
+  batchRepository,
+  batchVoteRepository,
+  petitionRepository,
+  voteRepository,
+} = require("../src/repositories");
+
+const { isBlank } = require("../src/utils");
+
+db.transaction(async transaction => {
+  const batches = await batchRepository(db).findAll();
+
+  return Promise.all(batches.map(({ id: batchId }) =>
+    batchVoteRepository(db).findAllByBatchId({ batchId, limit: 1 })
+      .then(async ({ results: [batchVote] }) => {
+        if (!batchVote) return;
+
+        const vote = await voteRepository(db).findById(batchVote.voteId)
+          .catch(e => {
+            if (e.message == "Not found") {
+              logger.info("Batch vote (vote id not found)", batchVote);
+              return;
+            }
+
+            return Promise.reject(e);
+          });
+
+        if (!vote) return;
+
+        const petition = await petitionRepository(db).findById(vote.petitionId);
+
+        const newAttrs = reject(isBlank, {
+          cityId: petition.cityId,
+          petitionId: petition.id,
+          uf: petition.uf,
+        });
+
+        logger.info("Updating batch:", batchId, "with:", newAttrs);
+
+        return batchRepository(db).updateById({ id: batchId, transaction })(newAttrs);
+      })
+  ));
+})
+  .then(() => {
+    logger.info("Successfully migrated");
+    process.exit(0);
+  })
+  .catch(error => {
+    logger.error(error);
+    process.exit(1);
+  });

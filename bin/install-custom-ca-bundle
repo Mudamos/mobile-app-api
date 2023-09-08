@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Let's encrypt Root CA bundle
+curl -O https://letsencrypt.org/certs/isrgrootx1.pem \
+  && curl -O https://letsencrypt.org/certs/isrg-root-x2.pem \
+  && curl -O https://letsencrypt.org/certs/lets-encrypt-r3.pem \
+  && cat isrgrootx1.pem isrg-root-x2.pem lets-encrypt-r3.pem > lets_encrypt_bundle_ca.pem \
+  && rm isrgrootx1.pem && rm isrg-root-x2.pem && rm lets-encrypt-r3.pem

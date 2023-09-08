@@ -1,0 +1,20 @@
+"use strict";
+
+const path = require("path");
+const { isMainApp, isSignerApp } = require("./src/utils");
+
+// Choose which app to run migrations using this env var
+const app = process.env.MIGRATION_APP || "main";
+console.log("Running Sequelize CLI for app:", app);
+
+if (isMainApp(app)) {
+  module.exports = {
+    "config": path.resolve("src", "db", "config.js"),
+    "migrations-path": path.resolve("src", "db", "migrations"),
+  };
+} else if (isSignerApp(app)) {
+  module.exports = {
+    "config": path.resolve("src", "db", "signer-config.js"),
+    "migrations-path": path.resolve("src", "db", "signer-migrations"),
+  };
+}

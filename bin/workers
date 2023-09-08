@@ -1,0 +1,197 @@
+#!/bin/sh
+":" //# http://sambal.org/?p=1014 ; exec /usr/bin/env node $( [ -n "$USE_OPENSSL_CA" ] && printf %s '--use-openssl-ca' ) --expose-gc "$0" "$@"
+
+require("dotenv").load({ silent: true });
+
+const config = require("../config")();
+
+// Old app config
+require("nconf")
+  .use("memory")
+  .argv()
+  .env();
+
+const program = require("commander");
+const {
+  complement,
+  contains,
+  flip,
+  isEmpty,
+  keys,
+  map,
+  pick,
+  pipe,
+  prop,
+  toPairs,
+} = require("ramda");
+
+const { isDev } = require("../src/utils");
+
+const {
+  logCreator,
+  Queue,
+} = require("../src/services");
+
+const { logger } = logCreator(config);
+const queue = Queue(config);
+
+const {
+  batchVoteCreator,
+  s3FileMover,
+  pdfSignatureCreator,
+} = require("../src/use-cases");
+
+const db = require("../src/db")(config);
+const {
+  batchRepository,
+  batchVoteRepository,
+  petitionRepository,
+  voteRepository,
+} = require("../src/repositories");
+
+const {
+  BatchVoteCreatorWorker,
+  FileMoverWorker,
+  PDFSignatureCreatorWorker,
+  MessageSignIntegratorCallbackWorker,
+} = require("../src/workers");
+
+const pdfSignatureCreatorWorker = PDFSignatureCreatorWorker({
+  logger,
+  pdfCreator: pdfSignatureCreator({
+    config,
+    enqueueBatchVoteCreation: queue.enqueueBatchVoteCreation,
+    enqueuePdfCreation: queue.enqueuePdfCreation,
+    logger,
+    petitionRepository: petitionRepository(db),
+    voteRepository: voteRepository(db),
+  }),
+});
+
+const batchVoteCreatorWorker = BatchVoteCreatorWorker({
+  logger,
+  batchVoteCreator: batchVoteCreator({
+    batchRepository: batchRepository(db),
+    batchVoteRepository: batchVoteRepository(db),
+    config,
+    db,
+    enqueueMoveFile: queue.enqueueMoveFile,
+    logger,
+    petitionRepository: petitionRepository(db),
+    voteRepository: voteRepository(db),
+  }),
+});
+
+const moveFileQueueWorker = FileMoverWorker({
+  logger,
+  fileMover: s3FileMover({
+    config,
+    logger,
+  }),
+});
+
+const messageSignIntegratorCallbackWorker = MessageSignIntegratorCallbackWorker({
+  config,
+  logger,
+});
+
+const workers = [];
+const startWorker = (name, worker) => {
+  worker.onQueueError(e => logger.error("Queue error", e));
+
+  workers.push(worker);
+  logger.info("Start:", name);
+  worker.start();
+
+  if (isDev) {
+    logger.debug("Attaching empty listener for", name);
+    worker.onEmpty(() => logger.debug("Queue", name, "is empty"));
+  }
+
+  return { worker, name };
+};
+
+const pdfSignatureCreatorQueue = queue.plipPdfCreatorConsumer({ handleMessage: pdfSignatureCreatorWorker });
+const batchVoteCreatorQueue = queue.batchVoteCreatorConsumer({ handleMessage: batchVoteCreatorWorker });
+const moveFileQueue = queue.moveFileConsumer({ handleMessage: moveFileQueueWorker });
+const messageSignIntegratorCallbackQueue = queue.messageSignIntegratorCallbackConsumer({ handleMessage: messageSignIntegratorCallbackWorker });
+
+const argCollect = (val, memo) => {
+  memo.push(val);
+  return memo;
+};
+
+const availableConsumers = {
+  "batch-vote-creator": batchVoteCreatorQueue,
+  "move-file": moveFileQueue,
+  "pdf-signature-creator": pdfSignatureCreatorQueue,
+  "message-sign-integrator-callback": messageSignIntegratorCallbackQueue,
+};
+
+const validateConsumers = names => {
+  const inexistent = complement(flip(contains))(keys(availableConsumers));
+  const unknown = names.filter(inexistent);
+
+  if (!isEmpty(unknown)) {
+    throw `Unknown consumers: ${unknown.join(", ")}`;
+  }
+}
+
+program
+  .usage("workers [options]")
+  .option("-c, --consumer [names]", `Consumers to start [${keys(availableConsumers).join(", ")}]`, argCollect, [])
+  .parse(process.argv);
+
+const consumersToStart = isEmpty(program.consumer) ? keys(availableConsumers) : program.consumer;
+validateConsumers(consumersToStart);
+
+const start = pipe(
+  pick(consumersToStart),
+  toPairs,
+  map(([name, worker]) => startWorker(name, worker))
+);
+
+const startedWorkers = start(availableConsumers);
+
+logger.info("Workers started");
+
+process.once("SIGINT", () => {
+  logger.info(`Workers to be stopped [${startedWorkers.length}]`, startedWorkers.map(prop("name")));
+
+  if (!startedWorkers.length) return process.exit(0);
+
+  logger.info("Stopping workers");
+
+  let done = 0;
+  const isAllStopped = () => startedWorkers.length === done;
+
+  const gracefulExit = 30 * 1000; // higher than polling 20s
+  const gracefulTimeout = setTimeout(() => {
+    logger.info(`Stopped workers [${done}]`);
+
+    if (isAllStopped()) {
+      logger.info("All workers successfully stopped. Exiting...");
+      process.exit(0);
+    } else {
+      logger.info("Force exit");
+      process.exit(0);
+    }
+  }, gracefulExit);
+
+  startedWorkers.forEach(({ worker, name }) => {
+    worker.onStop(() => {
+      done += 1;
+      logger.info("Stopped:", name, `[${done}]`);
+
+      if (isAllStopped()) {
+        logger.info("All workers successfully stopped. Exiting...");
+        clearTimeout(gracefulTimeout);
+        process.exit(0);
+      }
+    });
+
+    worker.stop();
+  });
+
+  setInterval(() => logger.info("Waiting for workers to be stopped", `${done} / ${startedWorkers.length}`), 3000);
+});

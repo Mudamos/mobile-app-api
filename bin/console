@@ -1,0 +1,155 @@
+#!/bin/sh
+":" //# http://sambal.org/?p=1014 ; exec /usr/bin/env node $( [ -n "$USE_OPENSSL_CA" ] && printf %s '--use-openssl-ca' ) --expose-gc "$0" "$@"
+
+require("dotenv").config({ silent: true });
+const nconf = require("nconf")
+    .use("memory")
+    .argv()
+    .env();
+const fs = require("fs");
+const repl = require("repl");
+const ramda = require("ramda");
+const isFunction = ramda.is(Function);
+
+const promisedRepl = repl => {
+  const originalEval = repl.eval;
+
+  repl.eval = (cmd, context, filename, callback) => {
+    originalEval.call(repl, cmd, context, filename, (err, res) => {
+      if (err || !res || !isFunction(res.then)) {
+        callback(err, res);
+      } else {
+        res.then(val => callback(null, val)).catch(callback);
+      }
+    });
+  };
+
+  return repl;
+};
+
+const replServer = promisedRepl(repl.start({
+  prompt: "BC > ",
+  useGlobal: true,
+}));
+
+const historyFile = "./.console-history";
+fs.closeSync(fs.openSync(historyFile, "a"));
+fs.readFileSync(historyFile)
+  .toString()
+  .split("\n")
+  .reverse()
+  .filter(line => line.trim())
+  .map(line => replServer.history.push(line));
+
+replServer.on("exit", () => {
+  fs.appendFileSync(historyFile, replServer.lines.join("\n") + "\n");
+  process.stdout.write("\n");
+  process.exit();
+});
+
+const config = require("../config")();
+const db = require("../src/db")(config);
+const signerDb = require("../src/db")(config, { database: "signer" });
+const tables = require("../src/tables")(db);
+const signerTables = require("../src/tables/signer")(signerDb);
+const CacheRedis = require("../config/initializers/cache-redis");
+const Cache = new CacheRedis();
+
+const FacebookTokenStrategy = require("passport-facebook-token");
+
+const utils = require("../src/utils");
+const BlockchainModel = require("../app_v1/models/blockchain/blockchain");
+
+const {
+  PetitionAddedNotifier,
+  RequiresMobileValidation,
+} = require("../src/use-cases");
+
+const {
+  appConfigRepository,
+  batchRepository,
+  batchVoteRepository,
+  cityRepository,
+  petitionRepository,
+  petitionInfoRepository,
+  petitionMobileRepository,
+  profileRepository,
+  userRepository,
+  voteRepository,
+} = require("../src/repositories");
+
+const { signedMessageRepository } = require("../src/repositories/signer");
+
+const {
+  logCreator,
+  MudamosClient,
+  Notifier,
+  Queue,
+} = require("../src/services");
+const { logger } = logCreator(config);
+
+const models = require("../src/models");
+const signerModels = require("../src/models/signer");
+const queue = Queue(config);
+
+const notifier = Notifier(config);
+const petitionNotifier = notifier.notifyWithPetition({ cityRepository: cityRepository(db) });
+
+Object.keys(ramda).forEach(key => replServer.context[key] = ramda[key]);
+Object.keys(tables).forEach(key => replServer.context[key] = tables[key]);
+Object.keys(signerTables).forEach(key => replServer.context[key] = signerTables[key]);
+Object.keys(models).forEach(key => replServer.context[key] = models[key]);
+Object.keys(signerModels).forEach(key => replServer.context[key] = signerModels[key]);
+
+replServer.context.appConfigRepository = appConfigRepository(db);
+replServer.context.config = config;
+replServer.context.db = db;
+replServer.context.batchRepository = batchRepository(db);
+replServer.context.batchVoteRepository = batchVoteRepository(db);
+replServer.context.cityRepository = cityRepository(db);
+replServer.context.logger = logger;
+replServer.context.mudamosClient = MudamosClient(config);
+replServer.context.notifier = notifier;
+replServer.context.petitionNotifier = petitionNotifier;
+replServer.context.petitionAddedNotifier = PetitionAddedNotifier({
+  petitionNotifier,
+  petitionRepository: petitionRepository(db),
+});
+replServer.context.petitionRepository = petitionRepository(db);
+replServer.context.petitionInfoRepository = petitionInfoRepository(db);
+replServer.context.petitionMobileRepository = petitionMobileRepository(db);
+replServer.context.profileRepository = profileRepository(db);
+replServer.context.requiresMobileValidation = RequiresMobileValidation({
+  petitionRepository: petitionRepository(db),
+  petitionInfoRepository: petitionInfoRepository(db),
+  petitionMobileRepository: petitionMobileRepository(db),
+});
+replServer.context.signedMessageRepository = signedMessageRepository(signerDb);
+replServer.context.queue = queue;
+replServer.context.userRepository = userRepository(db);
+replServer.context.voteRepository = voteRepository(db);
+
+replServer.context.Cache = Cache;
+
+replServer.context.utils = utils;
+replServer.context.BlockchainModel = BlockchainModel;
+
+// Old project things
+replServer.context.old = () => {
+  return {
+    blockchainSchedule: () => require("../app_v1/services/schedule-blockchain"),
+    nconf,
+  };
+};
+
+replServer.context.debugFacebookToken = () => {
+  const fbToken = new FacebookTokenStrategy({
+    clientID: config("FACEBOOK_CLIENT_ID"),
+    clientSecret: config("FACEBOOK_CLIENT_SECRET"),
+  }, (accessToken, refreshToken, profile, done) => {
+    console.log({ accessToken, refreshToken, profile, done });
+  });
+
+  replServer.context.fbToken = fbToken;
+  // fbToken.authenticate({ headers: { access_token: "a-access-token" }}, {})
+};

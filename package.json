@@ -1,0 +1,156 @@
+{
+  "name": "mobile-app-api",
+  "version": "0.0.0",
+  "description": "Mudamos Mobile Api",
+  "main": "index.js",
+  "scripts": {
+    "build-latest": "docker build --rm --force-rm -t mudamosapi:latest .",
+    "build-latest-and-deploy-staging": "npm run release && npm run push-staging",
+    "hotreload": "./node_modules/nodemon/bin/nodemon.js",
+    "lint": "./node_modules/.bin/eslint --quiet . bin/*",
+    "install-custom-ca-bundle": "./bin/install-custom-ca-bundle",
+    "migrate-main": "sequelize db:migrate",
+    "migrate-signer": "MIGRATION_APP=signer sequelize db:migrate",
+    "migration-create": "sequelize migration:create --name",
+    "migration-undo": "sequelize db:migrate:undo",
+    "push-latest": "./bin/push-latest",
+    "push-staging": "./bin/push-staging",
+    "release": "./bin/release",
+    "start": "node $( [ -n \"$USE_OPENSSL_CA\" ] && printf %s '--use-openssl-ca' ) index.js",
+    "tag-latest": "docker tag mudamosapi:latest $REMOTE_REPO",
+    "test": "node ./node_modules/mocha/bin/mocha"
+  },
+  "engines": {
+    "node": "7.6.0",
+    "npm": "4.1.2"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "apple-signin-auth": "^1.0.6",
+    "async": "^2.1.2",
+    "aws-sdk": "^2.79.0",
+    "bcrypt": "^1.0.2",
+    "bluebird": "^3.4.6",
+    "body-parser": "^1.15.2",
+    "chai": "^3.5.0",
+    "chance": "^1.0.6",
+    "change-case": "^3.0.0",
+    "co": "^4.6.0",
+    "commander": "^2.11.0",
+    "compression": "1.6.2",
+    "concat-stream": "^1.6.0",
+    "cookie-parser": "~1.4.3",
+    "cookie-session": "^2.0.0-beta.1",
+    "crypto": "0.0.3",
+    "dotenv": "^2.0.0",
+    "event-stream": "^3.3.5",
+    "express": "~4.13.4",
+    "express-handlebars": "3.0.0",
+    "extend": "^3.0.0",
+    "fb": "^1.1.1",
+    "gm": "^1.23.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-concat": "^2.6.0",
+    "gulp-livereload": "^3.8.1",
+    "gulp-mocha": "^3.0.1",
+    "gulp-uglify": "^2.0.0",
+    "gulp-util": "^3.0.7",
+    "heapdump": "^0.3.9",
+    "humps": "^2.0.1",
+    "jsonwebtoken": "^8.5.1",
+    "jwks-rsa": "^2.0.5",
+    "knex": "^0.15.2",
+    "lodash": "^4.17.4",
+    "lru-memoize": "^1.0.2",
+    "mkdirp": "^0.5.1",
+    "moment": "^2.17.1",
+    "morgan": "^1.9.0",
+    "mudamos-libcrypto": "0.6.5",
+    "multer": "^1.3.0",
+    "mysql": "^2.13.0",
+    "mysql2": "^1.4.2",
+    "nconf": "^0.8.4",
+    "newrelic": "^1.39.0",
+    "node-schedule": "^1.2.0",
+    "nodemailer": "^2.7.0",
+    "nodemailer-express-handlebars": "^2.0.0",
+    "oauth2-server": "^2.4.1",
+    "oauth2orize": "^1.5.1",
+    "onesignal-node": "^1.0.1",
+    "passport": "^0.3.2",
+    "passport-facebook": "^2.1.1",
+    "passport-facebook-token": "^3.3.0",
+    "passport-http": "^0.3.0",
+    "passport-http-bearer": "^1.0.1",
+    "passport-local": "^1.0.0",
+    "passport-oauth2-client-password": "^0.1.2",
+    "path": "^0.12.7",
+    "pdf2json": "1.2.0",
+    "pdfkit": "^0.8.0",
+    "pdfreader": "0.2.5",
+    "promise": "^7.1.1",
+    "ramda": "^0.26.1",
+    "rand-token": "^0.2.1",
+    "redis": "^2.6.3",
+    "request": "^2.79.0",
+    "request-promise": "^4.1.1",
+    "require-dir": "^0.3.1",
+    "rimraf": "^2.6.1",
+    "sequelize": "^5.22.3",
+    "sequelize-cli": "^3.0.0",
+    "serve-favicon": "~2.3.0",
+    "sha256": "^0.2.0",
+    "sqs-consumer": "^3.8.0",
+    "sqs-producer": "^1.6.1",
+    "superagent": "^3.6.3",
+    "superagent-prefix": "0.0.2",
+    "superagent-promise": "^1.1.0",
+    "sync-request": "^4.0.1",
+    "uuid": "^3.1.0",
+    "validator": "^6.1.0",
+    "winston": "^2.2.0",
+    "winston-stream": "0.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.9.0",
+    "nodemon": "^1.12.1"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 8,
+      "ecmaFeatures": {
+        "classes": true
+      }
+    },
+    "env": {
+      "es6": true,
+      "node": true
+    },
+    "extends": [
+      "eslint:recommended"
+    ],
+    "rules": {
+      "comma-dangle": [
+        "error",
+        "always-multiline"
+      ],
+      "no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "_",
+          "varsIgnorePattern": "_"
+        }
+      ],
+      "quotes": [
+        "error",
+        "double"
+      ],
+      "strict": [
+        "error",
+        "global"
+      ]
+    }
+  }
+}

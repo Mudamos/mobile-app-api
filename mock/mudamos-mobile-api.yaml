@@ -1,0 +1,998 @@
+swagger: '2.0'
+info:
+  title: Mudamos Mobile Api
+  description: Responsible for user access
+  version: "1.0.0"
+host: mudamos.mobile.api
+schemes:
+  - https
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /profile/wallet/:
+    post:
+      summary: Update Wallet
+      description: |
+       The endepoint /profile/wallet. Update Wallet.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: user
+          schema:
+            $ref: '#/definitions/Wallet'            
+      tags:
+        - Generate Wallet
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/UserData'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/FailValidation'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'  
+  /profile/mobile/:
+    post:
+      summary: Update Mobile
+      description: |
+       The endepoint /profile/mobile. Update Mobile.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: mobile
+          schema:
+            $ref: '#/definitions/Mobile'            
+      tags:
+        - Generate Mobile
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/UserData'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/FailValidation'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'  
+  /profile/mobile_pin/:
+    post:
+      summary: Generate Mobile PinCode
+      description: |
+       The endepoint /mobile/mobile_pin. Generate Mobile PinCode.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: mobile
+          schema:
+            $ref: '#/definitions/MobilePinCode'            
+      tags:
+        - Generate Mobile PinCode
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/MobilePinCodeData'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/FailValidation'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'  
+  /profile/documents/:
+    post:
+      summary: Save Profile Documents
+      description: |
+       The endepoint /profile/documents. Save Profile ZipCode.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: user
+          schema:
+            $ref: '#/definitions/UserDocuments'            
+      tags:
+        - Save User Profile
+      responses:
+        200:
+          description: Success Get User
+          schema:
+            $ref: '#/definitions/UserData'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/FailValidation'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'     
+  /profile/zipcode/:
+    post:
+      summary: Save Profile ZipCode
+      description: |
+       The endepoint /profile/zipcode. Save Profile ZipCode.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: user
+          schema:
+            $ref: '#/definitions/UserZipCode'            
+      tags:
+        - Save User Profile
+      responses:
+        200:
+          description: Success Get User
+          schema:
+            $ref: '#/definitions/UserData'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/FailValidation'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'     
+  /profile/birthday:
+    post:
+      summary: Save Profile Birthday
+      description: |
+       The endepoint /profile/birthday. Save Profile Birthday.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: user
+          schema:
+            $ref: '#/definitions/UserBirthDay'            
+      tags:
+        - Save User Profile
+      responses:
+        200:
+          description: Success Get User
+          schema:
+            $ref: '#/definitions/UserData'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/FailValidation'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'     
+  /profile:
+    get:
+      summary: Get a User Profile
+      description: |
+       The endepoint /profile. Get a specified User Profile.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+      tags:
+        - Get User Profile
+      responses:
+        200:
+          description: Success Get User
+          schema:
+            $ref: '#/definitions/UserData'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/FailValidation'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'     
+  /petition/{plip_id}/info:
+    get:
+      summary: Get a Plip Info
+      description: |
+       The endepoint /petition/{plip_id}/info. Get a Plip Info.
+      parameters:
+        - name: plip_id
+          in: path
+          type: string
+          required: true
+          description: Plip Id
+      tags:
+        - Get Plip Info
+      responses:
+        200:
+          description: Success Get Config
+          schema:
+            $ref: '#/definitions/PlipData'
+  /notification/confirm/{acessToken}:
+    get:
+      summary: Validation Notification
+      description: |
+       The endepoint /notification/confirm/{acessToken}:. Validation notifications .
+      parameters:
+        - name: acessToken
+          in: path
+          type: string
+          required: true
+          description: Access Token Notification
+      tags:
+        - Confirm Notification
+      responses:
+        200:
+          description: Success Validation - Show View HTML
+        default:
+          description: Unexpected error - Show View HTML
+  /message/sign:
+    post:
+      summary: Sign Message - Vote
+      description: |
+       The endepoint /message/sign. Sign a message (Vote).
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: signMessage
+          schema:
+            $ref: '#/definitions/SignMessage'
+      tags:
+        - Sign Message
+      responses:
+        200:
+          description: Success Sign Message
+          schema:
+            $ref: '#/definitions/ConfigSucess'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/FailValidation'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'   
+  /config/{key}:
+    get:
+      summary: Search address in Google Api
+      description: |
+       The endepoint /config/{key}. Get a specified Config.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: key
+          in: path
+          type: string
+          required: true
+          description: Key Config
+      tags:
+        - Get Config Key
+      responses:
+        200:
+          description: Success Get Config
+          schema:
+            $ref: '#/definitions/ConfigSucess'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/FailValidation'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'     
+  /addrress/search/{address}:
+    get:
+      summary: Search address in Google Api
+      description: |
+       The endepoint addrress/search/{address}. List a specified address in Google Api.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: address
+          in: path
+          type: string
+          required: true
+          description: Address
+      tags:
+        - Search Address
+      responses:
+        200:
+          description: Success Sign
+          schema:
+            $ref: '#/definitions/Address'
+        2000:
+          description: Fail
+          schema:
+            $ref: '#/definitions/Fail'            
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'     
+            
+  /auth/token:
+    post:
+      summary: Sign
+      description: |
+       The Sign endpoint becomes a user can use the system using your valid login.
+      parameters:
+        - name: userName
+          in: query
+          description: User Name
+          required: true
+          type: string
+        - name: userPassword
+          in: query
+          description: Password
+          required: true
+          type: password
+      tags:
+        - Sign
+      responses:
+        200:
+          description: Success Sign
+          schema:
+            $ref: '#/definitions/SuccessLogin'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+            
+  /auth/facebook/token/{access_token}:
+    post:
+      summary: Sign
+      description: |
+       The Sign endpoint becomes a user can use the system using your valid login.
+      parameters:
+        - name: access_token
+          in: path
+          type: string
+          required: true
+          description: Token Facebbok
+      tags:
+        - Sign
+      responses:
+        200:
+          description: Success Sign
+          schema:
+            $ref: '#/definitions/SuccessLogin'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'            
+  /users/sign_up:
+    post:
+      summary: User Create
+      description: |
+        The endepoint Users Post. Registers a new user.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'      
+        - name: user
+          schema:
+            $ref: '#/definitions/UserSignUp'
+      tags:
+        - User
+      responses:
+        200:
+          description: Success Sign
+          schema:
+            $ref: '#/definitions/User'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'                   
+  /users/sign_up*:
+    post:
+      summary: User Create
+      description: |
+        The endepoint Users Post. Registers a new user.
+      parameters:
+        - name: user
+          schema:
+            $ref: '#/definitions/UserSignUp'
+      tags:
+        - User
+      responses:
+        200:
+          description: Success Sign
+          schema:
+            $ref: '#/definitions/User'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'                
+  /users/{userId}:
+    get:
+      summary: User by Id
+      description: |
+       The endepoint Users/{userId}. List a specified user.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: userId
+          in: path
+          type: number
+          required: true
+          description: User Id
+      tags:
+        - UserId
+      responses:
+        200:
+          description: Success Sign
+          schema:
+            $ref: '#/definitions/UserData'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'                
+  /users/:
+    get:
+      summary: User by Id
+      description: |
+       The endepoint Users. List all users.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: userId
+          in: path
+          type: number
+          required: true
+          description: User Id
+      tags:
+        - UserId
+      responses:
+        200:
+          description: Success Sign
+          schema:
+            $ref: '#/definitions/UserDataAll'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'  
+  /users/message/{plip_id}:
+    post:
+      summary: User Message Plip
+      description: |
+        The endepoint /users/message/{plip_id}. List a specified plip sign
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'      
+        - name: plip_id
+          in: path
+          type: number
+          required: true
+          description: Plip Id
+      tags:
+        - Plip
+      responses:
+        200:
+          description: Success Sign
+          schema:
+            $ref: '#/definitions/SignMessageResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'                                        
+  /users/password/reset/{email}:
+    post:
+      summary: User Reset Password
+      description: |
+        The endepoint /users/password/reset/{email}. Reset User Password.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'      
+        - name: email
+          in: path
+          type: string
+          required: true
+          description: Email
+      tags:
+        - Reset Password
+      responses:
+        200:
+          description: Success Reset
+          schema:
+            $ref: '#/definitions/SuccessMessage'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /users/password/update:
+    post:
+      summary: User Update Password
+      description: |
+        The endepoint /users/password/update. Update password.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'      
+        - name: user
+          schema:
+            $ref: '#/definitions/UserPassword'
+      tags:
+        - Plip
+      responses:
+        200:
+          description:  Success Update Password
+          schema:
+            $ref: '#/definitions/UserData'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'      
+  /users/password/update*:
+    post:
+      summary: User Update Password
+      description: |
+        The endepoint /users/password/update*. Update password and email with PinCod.'
+      parameters:
+        - name: user
+          schema:
+            $ref: '#/definitions/UserPasswordEmailPinCode'
+      tags:
+        - Plip
+      responses:
+        200:
+          description: Success Update Password
+          schema:
+            $ref: '#/definitions/UserData'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'                                     
+  /messages/sign:
+    post:
+      summary: Messages
+      description: |
+       The endpoint messages. Sign a message to be sent to blockchain.
+      parameters:
+        - name: security
+          schema:
+            $ref: '#/definitions/Security'
+        - name: userId
+          in: path
+          type: number
+          required: true
+          description: Id User
+      tags:
+        - Messages
+      responses:
+        200:
+          description: Success Sign
+          schema:
+            $ref: '#/definitions/User'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'          
+definitions:
+  ProfileData:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP' 
+      data:
+         $ref: '#/definitions/User' 
+  PlipData:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP' 
+      data:
+        $ref: '#/definitions/InfoPlip' 
+  InfoPlip:
+    type: object
+    properties:
+      updatedAt:
+        type: dateTime
+        description: Last update
+      signaturesCount:
+        type: number
+        description: Number of Signatures
+      blockchainAddress:
+        type: string
+        description: Address Blockchain
+  SignMessageResponse:
+    type: object
+    properties:
+      updatedAt:
+        type: dateTime
+        description: Date Sign Plip
+  SignMessage:
+    type: object
+    properties:
+      petitionId:
+        type: number
+        definition: Petition Id
+      block:
+        type: string
+        definition: Miner Block Proof of Work
+  ConfigSucess:
+    type: oject
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP' 
+      data:
+        $ref: '#/definitions/DataConfigSuccess' 
+  DataConfigSuccess:
+    type: object
+    properties:
+      config:
+        $ref : '#/definitions/Config'
+  Config:
+    type: object
+    properties:
+      key:
+        type: string
+        definitions: Key Config
+      value:
+        type: string
+        definition: Value Config
+  Security:
+    type: object
+    properties:
+      Autorization:
+        type: string
+        description: Authentication  Security Hash
+  Error:
+    type: object
+    properties:
+      code:
+        type: number
+        description: Code Identify Error
+      message:
+        type: string
+        description: Message Friendily Error
+      fields:
+        type : string
+        description : Fields Erro
+  Fail:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP' 
+      data:
+        $ref: '#/definitions/Data' 
+  FailValidation:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP' 
+      data:
+        $ref: '#/definitions/DataFailValidation' 
+  DataFailValidation:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP' 
+      message:
+        type: string
+        description: Message Validation
+      validations:
+        type: array
+        items:
+           $ref: '#/definitions/Validation'
+  Validation:
+    type: object
+    properties:
+      key:
+        type: string
+        definition: Key Validation
+      message:
+        type: string
+        definition: Message Validation
+  Data:
+    type: object
+    properties:
+      type:
+        type: string
+        definition: Validation
+      message:
+        type: string
+        definition: Message Fail
+  DataLoginSucess:
+    type: object
+    properties:
+      access_token:
+        type: string
+        definition: Access Token
+      token_type:
+        type: string
+        definition: Token Type       
+  SuccessLogin:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP' 
+      data:
+        $ref: '#/definitions/DataLoginSucess' 
+  UserData:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP' 
+      data:
+        $ref: '#/definitions/UserDataSuccess' 
+  UserDataSuccess:
+    type: object
+    properties:
+      complete:
+        type: boolean
+        description: complete
+      user:
+        $ref: '#/definitions/User' 
+  UserDataAll:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP' 
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/User'         
+  User:
+    type: object
+    properties:
+      user_id:
+        type: number
+        description: Id User
+      user_name:
+        type: string
+        description: Name 
+      user_birthday:
+        type: date
+        description: Birthday
+      user_voteidcard:
+        type: string
+        description: Vote Id Card 
+      user_cpf:
+        type: string
+        description: CPF Document
+      user_zipcode:
+        type: string
+        description: ZipCode Full
+      user_validate:
+        type: dateTime
+        description: User Validate  
+      user_wallet_id:
+        type: number
+        description: WalletId Relationship            
+      wallet_key:
+        type: string
+        description: Wallet Key
+      wallet_status:
+        type: string
+        description: Wallet Status
+      mobile_id:
+        type: number
+        description: Mobile Id
+      mobile_status:
+        type: string
+        description: Mobile Status
+      mobile_number:
+        type: string
+        description: Mobile Number
+      mobile_imei:
+        type: string
+        description: Mobile Imei
+      mobile_brand:
+        type: string
+        description: Mobile Brand
+      mobile_model:
+        type: string
+        description: Mobile Model
+      mobile_so:
+        type: string
+        description: Mobile SO
+      mobile_so_version:
+        type: string
+        description: Mobile SO Version
+      mobile_screensize:
+        type: string
+        description: Mobile screenSize
+      profile_type:
+        type: string
+        description: Profile Type
+        enum:
+          app:
+            type: string
+          facebbok:
+            type: string
+      profile_email:
+        type: string
+        description: Profile Email
+      profile_id:
+        type: string
+        description: Profile Id
+  UserWallet:
+    type: object
+    properties:
+      userWalletId:
+        type: number
+        description: Id User Wallet
+      User:
+        $ref: '#/definitions/User'
+      walletId:
+        type: number
+        description: Status      
+      status:
+        type: boolean
+        description: Status      
+  Mobile:
+    type: object
+    properties:
+      pinCode:
+        type: number
+        description: Id Mobile
+      number:
+        type : string
+        description : Number Mobile ex.:5511999001122
+      imei:
+        type: string
+        description: Imei Mobile Device
+      brand:
+        type: string
+        description: Branch Mobile Device
+      model:
+        type: string
+        description: Model Mobile Device
+      so:
+        type: string
+        description: System Operation Mobile Device
+      soVersion:
+        type: string
+        description: System Operation Version 
+      screenSize:
+        type: string
+        description: Size Screen Mobile Device
+  Wallet:
+    type: object
+    properties:
+      walletKey:
+        type: string
+        description: Wallet Key
+  Petition:
+    type: object
+    properties:
+      petitionId:
+        type: number
+        description: Id Petition
+      mudamosId:
+        type: number
+        description: Mudamos Petition Id
+      txId:
+        type: string
+        description: Transaction
+      digSig:
+        type: string
+        description: Digital Signature Petition
+      petition:
+          $ref: '#/definitions/Petition'
+  Vote:
+    type: object
+    properties:
+      voteId: 
+        type: number
+        description: Id Vote
+      petitionId:
+        type: number
+        description: Petition Id
+      digSig:
+        type: string
+        description: Digital Signature
+      UserWallet:
+        $ref: '#/definitions/UserWallet'
+      walletId:
+        type: string
+        description: Wallet Id
+      status:
+        type: boolean
+        description: Status
+      userId:
+        $ref: '#/definitions/User'
+  Address:
+    type: object
+    properties:
+      address: 
+        type: string
+        description: Address
+      zipcode:
+        type: string
+        description: Zipcode
+      lat:
+        type: number
+        description: Latitude
+      lng:
+        type: number
+        description: Longitude        
+  StatusHTTP:
+    type: enum
+    properties:
+      success:
+        type: string
+      fail:
+        type: string
+  UserBirthDay:
+    type: object
+    properties:
+      birthday:
+        type: date
+        description: User Birthday
+  UserZipCode:
+    type: object
+    properties:
+      zipcode:
+        type: string
+        description: User ZipCode
+  UserDocuments:
+    type: object
+    properties:
+      voteidcar:
+        type: string
+        description: User Voteidcard
+      cpf:
+        type: string
+        description: User Cpf 
+  UserSignUp:
+    type: object
+    properties:
+      name:
+        type: string
+        description: User Name
+      email:
+        type: string
+        definition: User Eamil
+      password:
+        type: string
+        definition: User Password
+  UserPassword:
+    type: object
+    properties:
+      password:
+        type: string
+        definition: User Password       
+  UserPasswordEmailPinCode:
+    type: object
+    properties:
+      password:
+        type: string
+        definition: User Password         
+      email:
+        type: string
+        definition: User Eamil
+      pincode:
+        type: number
+        definition: Pincode Validation    
+  MobilePinCode:
+    type: object
+    properties:
+      number:
+        type: string
+        description: Mobile Number
+  MobilePinCodeData:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP'       
+  SuccessMessage:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/StatusHTTP'     
+      message:
+        type: string
+        definition: Message Success
